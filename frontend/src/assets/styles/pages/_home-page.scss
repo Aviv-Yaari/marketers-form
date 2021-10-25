@@ -1,0 +1,20 @@
+.home-page {
+  .slider-container {
+    margin-top: 16px;
+    margin-bottom: 28px;
+    .slider {
+      margin-top: 38px;
+      width: 95%;
+      align-self: center;
+    }
+  }
+  .actions {
+    margin-top: 30px;
+  }
+  button.disabled {
+    pointer-events: none;
+  }
+  > * {
+    color: $clr-2;
+  }
+}
