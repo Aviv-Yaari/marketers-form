@@ -1,7 +1,10 @@
-import { Alert, Button, CircularProgress, Link, MenuItem, Slider, Snackbar, TextField } from '@mui/material';
+import { Alert, CircularProgress, MenuItem, Snackbar } from '@mui/material';
 import { useFormik } from 'formik';
 import { useEffect, useState } from 'react';
 import * as yup from 'yup';
+import { FormActions } from '../cmps/FormActions';
+import { FormField } from '../cmps/FormField';
+import { FormSlider } from '../cmps/FormSlider';
 import { httpService } from '../services/http.service';
 
 const validationSchema = yup.object({
@@ -20,21 +23,6 @@ const validationSchema = yup.object({
     ),
 });
 
-const FormField = props => {
-  const { formik, name } = props;
-  return (
-    <TextField
-      value={formik.values[name]}
-      onChange={formik.handleChange}
-      error={formik.touched[name] && Boolean(formik.errors[name])}
-      helperText={formik.touched[name] && formik.errors[name]}
-      margin="normal"
-      fullWidth
-      {...props}
-    />
-  );
-};
-
 export function HomePage(props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -45,10 +33,6 @@ export function HomePage(props) {
     httpService.get('marketer').then(marketers => setMarketersCount(marketers.length));
   }, []);
 
-  const handleSnackbarClose = () => {
-    setIsSnackbarOpen(false);
-  };
-
   const onSubmit = async values => {
     if (isSubmitting) return;
     try {
@@ -57,10 +41,11 @@ export function HomePage(props) {
       props.history.push('/thankyou?data=' + JSON.stringify(values));
     } catch (err) {
       setIsSubmitting(false);
-      setError(err.response.data.err || 'An error occured while submitting the form');
+      setError(err.response?.data?.err || 'An error occured while submitting the form');
       setIsSnackbarOpen(true);
     }
   };
+
   const formik = useFormik({
     initialValues: {
       firstName: '',
@@ -78,7 +63,7 @@ export function HomePage(props) {
   return (
     <main className="home-page">
       <h1>Marketers</h1>
-      {marketersCount && <p>{marketersCount} marketers have joined so far!</p>}
+      {marketersCount ? <p>{marketersCount} marketers have joined so far!</p> : <></>}
       <form onSubmit={formik.handleSubmit}>
         <FormField formik={formik} name="firstName" label="First name" />
         <FormField formik={formik} name="lastName" label="Last name" />
@@ -95,47 +80,12 @@ export function HomePage(props) {
           <MenuItem value="1-2">1-2 years</MenuItem>
           <MenuItem value="2-or-more">2 or more years</MenuItem>
         </FormField>
-        <div className="slider-container flex column">
-          <label htmlFor="">What was the biggest campaign budget you have managed in a single month?</label>
-          <Slider
-            className="slider"
-            name="biggestCampaign"
-            defaultValue={1000}
-            min={1000}
-            max={500000}
-            step={1000}
-            valueLabelDisplay="auto"
-            value={formik.values.biggestCampaign}
-            onChange={formik.handleChange}
-            valueLabelFormat={val =>
-              new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(
-                val
-              )
-            }
-            marks={[
-              {
-                value: 1000,
-                label: '1000$',
-              },
-              {
-                value: 500000,
-                label: '500,000$',
-              },
-            ]}
-          />
-        </div>
-        <div className="actions flex space-between">
-          <Button className={isSubmitting ? 'disabled' : ''} type="submit" variant="contained" disableElevation>
-            Submit
-          </Button>
-          <Link component="button" variant="body2">
-            Reset Form
-          </Link>
-        </div>
+        <FormSlider formik={formik} name="biggestCampaign" min={1000} max={500000} step={1000} />
+        <FormActions isSubmitting={isSubmitting} />
       </form>
       {isSubmitting && <CircularProgress sx={{ m: '20px' }} />}
       {error && (
-        <Snackbar open={isSnackbarOpen} autoHideDuration={3000} onClose={handleSnackbarClose}>
+        <Snackbar open={isSnackbarOpen} autoHideDuration={3000} onClose={() => setIsSnackbarOpen(false)}>
           <Alert severity="error" sx={{ width: '100%' }}>
             {error}
           </Alert>
